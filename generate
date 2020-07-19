@@ -1,0 +1,46 @@
+#!/usr/bin/perl -w
+use strict;
+
+my $yyyy = '';
+my %entry;
+
+sub dump_entry {
+    %entry || return;
+
+    my $D = $entry{'D'};
+    if ($D ne $yyyy) {
+	print "</ul>\n\n" if $yyyy;
+	print "<h2>$D</h2>\n";
+	print "<ul>\n";
+	$yyyy = $D;
+    }
+
+    my $U = $entry{'U'};
+    my $V = $entry{'V'};
+    if ($V) {
+	$V =~ s/\(/:/;
+	$V =~ s/\)//;
+	$V =~ s/-/&ndash;/;
+	print "<li><p><a href=\"$U\">SBT $V</a>, $D.\n";
+    }
+    else {
+	my $T = $entry{'T'};
+	print "<li><p>$T.\n";
+    }
+    my $X = $entry{'X'};
+    if ($X) {
+	$X =~ s/<p>INNEH.+?.\s+//;
+	$X =~ s/<\/p>$//;
+	print "<br>$X\n";
+    }
+    %entry = ();
+}
+
+while (<>) {
+    /^$/ and dump_entry(), next;
+    /^%(.)\s(.+)/ and $entry{$1} = $2, next;
+}
+
+dump_entry();
+
+print "</ul></body></html>\n";

@@ -1,0 +1,154 @@
+This is simply a HTML page with tables of content for all issues of
+Svensk Botanisk Tidskrift (SBT), with links to the PDF versions. The
+idea is that in your web browser, you do a normal text search for
+whatever you're interested in (Hieracium, Västergötland, whatever),
+and retrieve the PDF containing the article.
+
+That web page is
+
+    diva/sbt.html
+
+It's extracted from DiVA, Digitala Vetenskapliga Arkivet, in 2020, at
+which point only SBT 1907--2016 was available there.
+
+Searching with DiVA's interface sucks (for people not used to it,
+anyway), so the recommended way to search in SBT is with a Google
+search. While Google is more flexible in some ways, the search
+presented here is more reliable in other ways, and you can also browse
+for interesting subjects.
+
+This Git repository contains both the HTML page, and the tools used to
+create it (by fetching a bibliography from DiVA and processing it).
+
+
+URNs and links to PDF documents
+===============================
+
+DiVA assigns identities to the various SBT issues. The most
+interesting one is the URN. E.g. "urn:nbn:se:uu:diva-375439" is SBT
+110:1. You'd think there would be a corresponding URL like
+http://www.diva-portal.org/375439, but there's not. Instead KB is
+involved; http://urn.kb.se/resolve?urn=urn:nbn:se:uu:diva-375439
+redirects to a less permanent URL at DiVA, with the correct entry.
+
+The rest of this text is not mandatory reading; it's mostly notes I
+took while trying to understand how to generate a decent index.
+
+
+The DiVA search interface
+=========================
+
+A simple search on diva-portal.org for "Svensk+Botanisk+Tidskrift" and
+"only results with full text in DiVA" gives an results page and 495
+hits, of which 492 are of type "Collection". (The other three are
+probably individual articles which happen to have their own entries.)
+
+Changing to 250 rows per page and sort by "Issued (Oldest first), Title"
+gives a permalink
+
+    http://www.diva-portal.org/smash/resultList.jsf?query=Svensk%2BBotanisk%2BTidskrift&language=en&searchType=SIMPLE&noOfRows=250&sortOrder=dateIssued_sort_asc&sortOrder2=title_sort_asc&onlyFullText=true&sf=all&aq=%5B%5B%5D%5D&aqe=%5B%5D&aq2=%5B%5B%5D%5D&af=%5B%5D
+
+or
+
+    http://www.diva-portal.org/smash/resultList.jsf
+    ?query=Svensk%2BBotanisk%2BTidskrift
+    &language=en
+    &searchType=SIMPLE
+    &noOfRows=250
+    &sortOrder=dateIssued_sort_asc
+    &sortOrder2=title_sort_asc
+    &onlyFullText=true
+    &sf=all
+    &aq=%5B%5B%5D%5D
+    &aqe=%5B%5D
+    &aq2=%5B%5B%5D%5D
+    &af=%5B%5D
+
+There's nothing preventing editing pf noOfRows, so you can easily get
+all of the result on one page.
+
+Only 1907--2016 are in the result list, although SBF says they release
+the issues after two years (and although there could be entries before
+the PDF is released in digital form). Perhaps this is just some work
+that has been delayed.
+
+The resulting HTML is shock full of Javascript and temporary session
+IDs; there's no or little semantic about it. It turns out we don't
+need to use it (see below) but let's investigate the results a bit
+first. An entry might be:
+
+    492.
+    Svensk Botanisk Tidskrift
+    Carlsson, Bengt
+    Svensk Botanisk Tidskrift: Volym 110: Häfte 5, 2016
+    2016
+    Collection (editor) (Other academic)
+    Abstract [sv]
+    Download full text (pdf)
+
+The 'Abstract' part is a hidden table of contents, with no internal structure.
+
+The first link (still using 110(5) as an example) goes to a per-entry
+page in the search result.  The same information is repeated there,
+along with a list of identifiers:
+
+    URN: urn:nbn:se:uu:diva-375443
+    OAI: oai:DiVA.org:uu-375443
+    DiVA, id: diva2:1283716
+
+At least the URN is a permanent identifier, and KB promises to resolve
+it (http://urn.kb.se/resolve?urn=urn:nbn:se:uu:diva-375443 redirects
+to uu.diva-portal.org/smash/record.jsf?pid=diva2:1283716)
+
+Bizarrely, diva2:1283716 is /not/ a permanent identifier but is
+documented as an accidental artifact of their database; reindexing
+will happen and will invalidate this identifier. Sounds crazy to me,
+but I'm not a database person or librarian; perhaps this is how things
+are done.
+
+Since this diva2 identifier is part of the URL for the PDF, you cannot
+reliably link directly to the PDF. The URLs look like:
+
+    http://www.diva-portal.org/smash/get/diva2:1283716/FULLTEXT01.pdf
+    http://uu.diva-portal.org/smash/get/diva2:1283716/FULLTEXT01.pdf
+
+Another unfortunate aspect of the URL is that the file name part is
+FULLTEXT01.pdf; makes it hard to download two items to read two
+articles. Perhaps you're not supposed to save copies locally.
+
+
+Create feeds
+============
+
+Anyway, there's a much better way (for our purposes) to seach. It's
+called "Create feeds" (I don't know why) and you can make the result
+appear as (among other things) a BibTeX or Endnote bibliography. Such
+an entry can look like:
+
+    %0 Edited Book
+    %C Uppsala
+    %D 2016
+    %E Carlsson, Bengt
+    %G Swedish
+    %I Svenska Botaniska Föreningen
+    %K Botany
+    %K Botanik
+    %P 64
+    %S Svensk botanisk tidskrift
+    %V 110(5)
+    %T Svensk Botanisk Tidskrift : Volym 110: Häfte 5, 2016
+    %U http://urn.kb.se/resolve?urn=urn:nbn:se:uu:diva-375443
+    %X <p>INNEHÅLLSFÖRTECKNING: K. MARTINSSON: Vivi gjorde krigstid
+       till blomstertid. S. GRUNDSTRÖM: Botaniska glimtar från Balis
+       regnskogar. I. JONASSON: Möten med växter: Berget vid Ture. L. O.
+       BJÖRN: Ipomoea - sötpotatisens släkte. P. TORÄNG: Från
+       forskningsfronten: Besksötan tar myror till hjälp. M. MAGNUSSON:
+       Botanikdagarna i Dalarna. Böcker: L. JONSELL: Gästriklands flora;
+       K. HYLANDER: Mossor - en fältguide. Föreningsnytt: Ledare: S.
+       GRUNDSTRÖM: Växtatlas i vardande.</p>
+    %@ 0039-646X
+
+Key information there is the urn.kb.se URL, and the table of contents
+(unfortunately just an unstructured piece of HTML text, with author
+names, bizarrely, in CAPITAL LETTERS, and a lot of typos). There
+doesn't seem to be a bibliography over individual articles.
